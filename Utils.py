@@ -43,11 +43,16 @@ def class_weights(y_tr):
     Return: Positive weights, negative weights, proportional weights"""
     positive_weights = {}
     negative_weights = {}
-    F = get_labels_prop(y_tr)
+    F = 1/get_labels_prop(y_tr)
+    tot = 0
+    for el in F:
+        tot += el
+    F = F/tot
+    print("check: ", np.sum(F))
     for i in range(8):
         positive_weights[i] = y_tr.shape[0]/(2*np.count_nonzero(y_tr[:,:,i]==1))
         negative_weights[i] = y_tr.shape[0]/(2*np.count_nonzero(y_tr[:,:,i]==0))
-    return positive_weights, negative_weights, 1/F
+    return positive_weights, negative_weights, F
 
 def binary_CE_weighted(y_true, y_pred):
     """Weighted custom loss, two options for the weights: 

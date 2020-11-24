@@ -57,6 +57,50 @@ def Acc(y_true, y_pred, class_weights):
         acc = a.result().numpy()
         Acc_per_label.append(acc*class_weights[i])
     return Acc_per_label
+
+def run_exp_hist(x_1, y_1, x_2, y_2, repeats=5, gamma = 2, node = 100):
+    """Should return f1 score here and not accuracy -> CHANGE IT"""
+    scores = list()
+    train = pd.DataFrame()
+    val = pd.DataFrame()
+    for r in range(repeats):
+        acc, score1, hist = evaluate_model(x_1, y_1, x_2, y_2, gamma, node)
+        score1 = score1 * 100.0
+        print('>#%d: %.3f' %(1, score1))
+        scores.append(score1)
+        train[str(r)] = hist.history['loss']
+        val[str(r)] = hist.history['val_loss']
+    summarize_scores(scores)
+    plt.plot(train, color='blue', label='train')
+    plt.plot(val, color='orange', label='validation')
+    plt.title('model train vs validation loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.show()
     
+def cross_validation(x_tr, y_tr, x_val, y_val, nodes, gamma = 2):
+    """A modifier selon vos besoins"""
+    scores_f1 = list()
+    accuracy = list()
+    train = pd.DataFrame()
+    val = pd.DataFrame()
+    for i, n in enumerate(nodes):
+        a, f1, hist = evaluate_model(x_tr, y_tr, x_val, y_val, gamma, n)
+        f1 = f1 * 100.0
+        a = a*100.0
+        print('>#%i: f1 score: %.3f1, accuracy: %.3a' %(i, f1, a))
+        scores_f1.append(f1)
+        accuracy.append(a)
+        train[str(r)] = hist.history['loss']
+        val[str(r)] = hist.history['val_loss']
+
+    summarize_scores(scores_f1)
+    summarize_scores(accuracy)
+    plt.plot(train, color='blue', label='train')
+    plt.plot(val, color='orange', label='validation')
+    plt.title('model train vs validation loss')
+    plt.ylabel('Focal loss')
+    plt.xlabel('epoch')
+    plt.show()
     
 
