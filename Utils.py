@@ -1,8 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler #,normalize
-from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler,normalize
+from sklearn.model_selection import train_test_split, StratifiedKFold
 import tensorflow.keras.backend as K
+
 
 #get categories proportions -> can be used in report to show imbalance: TO DO
 def get_labels_prop(y, verbose = 0):
@@ -34,6 +35,9 @@ def preprocess(x):
         scaler = StandardScaler()
         x[:,:,3*j] = scaler.fit_transform(x[:,:,3*j])
         x[:,:,3*j+1] = scaler.fit_transform(x[:,:,3*j+1])
+        x[:,:,3*j] = normalize(x[:,:,3*j])
+        x[:,:,3*j+1] = normalize(x[:,:,3*j+1])
+        
             
     return x
 
@@ -54,16 +58,15 @@ def class_weights(y_tr):
         negative_weights[i] = y_tr.shape[0]/(2*np.count_nonzero(y_tr[:,:,i]==0))
     return positive_weights, negative_weights, F
 
-def binary_CE_weighted(y_true, y_pred):
+def binary_CE_weighted(y_true, y_pred, pos = np.ones(8), neg = np.ones(8), w = np.ones(8)):
     """Weighted custom loss, two options for the weights: 
     [positive and negative], or [inversely proportional to label distribution], see weights computation above
-    WEIGHTS SHOULD BE DEFINED GLOBALLY (FOR THE MOMENT)
     Argument: ground truth Y, predicted Y
     Return: weighted binary cross entropy"""
     loss = 0
     for i in range(8):
-        #loss -= pos[i]*y_true[i]*K.log(y_pred[i]) + neg[i]*(1-y_true[i])*K.log(1-y_pred[i])
-        loss -= w[i] * (y_true[:,:,i]*K.log(y_pred[:,:,i]) + (1-y_true[:,:,i])*K.log(1-y_pred[:,:,i]))
+        loss -= pos[i]*y_true[i]*K.log(y_pred[i]) + neg[i]*(1-y_true[i])*K.log(1-y_pred[i])
+        #loss -= w[i] * (y_true[:,:,i]*K.log(y_pred[:,:,i]) + (1-y_true[:,:,i])*K.log(1-y_pred[:,:,i]))
         
     return loss
 
