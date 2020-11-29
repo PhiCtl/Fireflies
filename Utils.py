@@ -52,7 +52,7 @@ def class_weights(y_tr):
     for el in F:
         tot += el
     F = F/tot
-    print("check: ", np.sum(F))
+    #print("check: ", np.sum(F))
     for i in range(8):
         positive_weights[i] = y_tr.shape[0]/(2*np.count_nonzero(y_tr[:,:,i]==1))
         negative_weights[i] = y_tr.shape[0]/(2*np.count_nonzero(y_tr[:,:,i]==0))
@@ -70,16 +70,14 @@ def binary_CE_weighted(y_true, y_pred, pos = np.ones(8), neg = np.ones(8), w = n
         
     return loss
 
-def train_val_test_split(X, Y, ratio_tr_te = 0.2, ratio_tr_val = 0.2):
+def train_te_split(X, Y, ratio_tr_te = 0.2):
     """Build train validation test splits from raw data
     Argument: Raw matrices X and Y (3D)
     Return: processed train, validation and test sets"""
     X_processed = preprocess(X)
     x_tr, x_te, y_tr, y_te = train_test_split(X_processed, Y, test_size = ratio_tr_te, random_state = 200)
-    x_tr, x_val, y_tr, y_val = train_test_split(x_tr, y_tr, test_size = ratio_tr_val, random_state = 240)
-    get_labels_prop(y_tr)
-    get_labels_prop(y_te)
+  
     #get_labels_prop(y_val)
-    return [x_tr, y_tr], [x_val, y_val], [x_te, y_te]
+    return [x_tr, y_tr], [x_te, y_te]
    
 
