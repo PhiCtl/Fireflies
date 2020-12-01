@@ -14,6 +14,8 @@ def F1_score(y_t, y_p, weights):
     P = Precision()
     R = Recall() #label per label evaluation
     F1_score_per_label = [] #store per label
+    P_per_label = []
+    R_per_label = []
     F1_tot = 0 #weighted sum
 
     for i in range(8):
@@ -28,10 +30,14 @@ def F1_score(y_t, y_p, weights):
       else:
         f1 = 2*p*r/ (p+r)
       F1_score_per_label.append(f1)
+      P_per_label.append(p)
+      R_per_label.append(r)
+
       F1_tot += f1*weights[i]
 
-    return F1_score_per_label, F1_tot
-    
+    return F1_score_per_label, P_per_label, R_per_label, F1_tot
+
+
 def Weighted_acc(y_t, y_p, weights):
     """Compute the weighted accuracy for each label
     Argument: ground truth label Y (3D), prediction (3D), class weights

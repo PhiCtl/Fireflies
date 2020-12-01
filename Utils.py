@@ -36,9 +36,7 @@ def preprocess(x):
         x[:,:,3*j] = scaler.fit_transform(x[:,:,3*j])
         x[:,:,3*j+1] = scaler.fit_transform(x[:,:,3*j+1])
         x[:,:,3*j] = normalize(x[:,:,3*j])
-        x[:,:,3*j+1] = normalize(x[:,:,3*j+1])
-        
-            
+        x[:,:,3*j+1] = normalize(x[:,:,3*j+1])     
     return x
 
 def class_weights(y_tr):
@@ -58,26 +56,32 @@ def class_weights(y_tr):
         negative_weights[i] = y_tr.shape[0]/(2*np.count_nonzero(y_tr[:,:,i]==0))
     return positive_weights, negative_weights, F
 
-def binary_CE_weighted(y_true, y_pred, pos = np.ones(8), neg = np.ones(8), w = np.ones(8)):
+def binary_CE_weighted(y_true, y_pred):
     """Weighted custom loss, two options for the weights: 
     [positive and negative], or [inversely proportional to label distribution], see weights computation above
     Argument: ground truth Y, predicted Y
     Return: weighted binary cross entropy"""
+    pos = [0.013478341699200595, 0.004400339888322408, 0.020631758679567444, 0.009843856076035303, 0.025709219858156027, 0.5, 0.009639675575056508, 0.0011364705144684454]
+    neg = [0.0007321679239757224, 0.0008245757699831673, 0.00071863291239617, 0.0007471530890915649, 0.0007137231738531207, 0.0006954102920723226, 0.0007483561969054181, 0.0017854504260454121]
+    
     loss = 0
+    y_pred = y_pred > 0.5
+    y_pred = tf.cast(y_pred, tf.int64)
+    print(y_pred)
     for i in range(8):
-        loss -= pos[i]*y_true[i]*K.log(y_pred[i]) + neg[i]*(1-y_true[i])*K.log(1-y_pred[i])
+        loss -= pos[i]*y_true[:,:,i]*K.log(y_pred[:,:,i]) + neg[i]*(1-y_true[:,:,i])*K.log(1-y_pred[:,:,i])
         #loss -= w[i] * (y_true[:,:,i]*K.log(y_pred[:,:,i]) + (1-y_true[:,:,i])*K.log(1-y_pred[:,:,i]))
         
     return loss
 
-def train_te_split(X, Y, ratio_tr_te = 0.2):
+def train_te_val_split(X, Y, ratio_tr_te = 0.2):
     """Build train validation test splits from raw data
     Argument: Raw matrices X and Y (3D)
-    Return: processed train, validation and test sets"""
+    Return: processed train and test sets"""
     X_processed = preprocess(X)
     x_tr, x_te, y_tr, y_te = train_test_split(X_processed, Y, test_size = ratio_tr_te, random_state = 200)
-  
+    x_tr, x_val, y_tr, y_val = train_test_split(x_tr, y_tr, test_size = ratio_tr_te, random_state = 200)
     #get_labels_prop(y_val)
-    return [x_tr, y_tr], [x_te, y_te]
+    return [x_tr, y_tr], [x_te, y_te], [x_val, y_val]
    
 
