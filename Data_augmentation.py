@@ -3,7 +3,7 @@ import numpy as np
 from Utils import train_te_val_split, preprocess
 from sklearn.model_selection import train_test_split
 
-def data_augmentation(x, y):
+def data_augmentation(x, y, T):
     """Split training set into smaller time windows
     Arguments: (x,y) total data set (3D arrays)
     Return: training set (batches of time steps size 2 times less than validation and test set)
@@ -13,22 +13,26 @@ def data_augmentation(x, y):
     x_tr, x_te, y_tr, y_te = train_test_split(preprocess(x), y, test_size = 0.2, random_state = 200)
     x_tr, x_val, y_tr, y_val = train_test_split(x_tr, y_tr, test_size = 0.2, random_state = 200)
     #build indices
-    n = np.int(x_tr.shape[1]/2)
+    n = np.int(x_tr.shape[1]/T)
     bs = x_tr.shape[0]
-    batch_x = np.zeros((bs*2,n,x_tr.shape[2]))
-    batch_y = np.zeros((bs*2,n,y_tr.shape[2]))
+    batch_x = np.zeros((bs*T,n,x_tr.shape[2]))
+    batch_y = np.zeros((bs*T,n,y_tr.shape[2]))
 
     #build batches
-    batch_x[0:bs,:,:] = x_tr[:,0:n,:]
-    batch_y[0:bs,:,:] = y_tr[:,0:n,:]
-    batch_x[bs:,:,:] = x_tr[:,n:,:]
-    batch_y[bs:,:,:] = y_tr[:,n:,:]
+    for i in range(T):
+      batch_x[i*bs:bs*(i+1),:,:] = x_tr[:,i*n:n*(i+1),:]
+      batch_y[i*bs:bs*(i+1),:,:] = y_tr[:,i*n:n*(i+1),:]
+    """batch_x[bs:bs*2,:,:] = x_tr[:,n:n*2,:]
+    batch_y[bs:bs*2,:,:] = y_tr[:,n:n*2,:]
+    batch_x[bs*2:,:,:] = x_tr[:,n*2:,:]
+    batch_y[bs*2:,:,:] = y_tr[:,n*2:,:]"""
+    
     
     return [batch_x, batch_y], [x_te, y_te], [x_val, y_val]
 
 
 def data_augmentation_2(x,y):
-    "Ugly function but might do the job"
+    "Creates a new larger data set by randomly perturbing positions with gaussian noise"
     train, test, val = train_te_val_split(preprocess(x), y)
     x_tr_1 = train[0]
     offset(x_tr_1)
@@ -38,6 +42,9 @@ def data_augmentation_2(x,y):
     return [X_tr, Y_tr], test, val
 
 def offset(x):
+    """Adds gaussian noise to features vector
+    Argument: (3D) features vector x
+    Returns: perturbed positions"""
     t = np.random.normal()
     n_features = np.int(x.shape[2]/3)
     for j in range(n_features): 

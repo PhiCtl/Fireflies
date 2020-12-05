@@ -27,9 +27,9 @@ def get_labels_prop(y, verbose = 0):
     return F
 
 def preprocess(x):
-    """Standardize (x,y) positions (so every X[:,:,3*j], X[:,:,3*j+1] for j=0 -> 75/3)
-    Argument: feature vector
-    Return: standardize feature vector"""
+    """Standardizes and normalizes (x,y) positions (so every X[:,:,3*j], X[:,:,3*j+1] for j=0 -> 75/3)
+    Argument: features vector X (3D)
+    Return: standardized normalized features vector"""
     n_features = np.int(x.shape[2]/3)
     for j in range(n_features): 
         scaler = StandardScaler()
@@ -40,21 +40,21 @@ def preprocess(x):
     return x
 
 def class_weights(y_tr):
-    """Compute the weights for the custom loss
-    Argument: training Y vector
-    Return: Positive weights, negative weights, proportional weights"""
-    positive_weights = {}
-    negative_weights = {}
+    """Computes the proportional weights
+    Argument: training Y vector (3D)
+    Return: Proportional weights"""
+    #positive_weights = {}
+    #negative_weights = {}
     F = 1/get_labels_prop(y_tr)
     tot = 0
     for el in F:
         tot += el
     F = F/tot
     #print("check: ", np.sum(F))
-    for i in range(8):
-        positive_weights[i] = y_tr.shape[0]/(2*np.count_nonzero(y_tr[:,:,i]==1))
-        negative_weights[i] = y_tr.shape[0]/(2*np.count_nonzero(y_tr[:,:,i]==0))
-    return positive_weights, negative_weights, F
+    #for i in range(8):
+        #positive_weights[i] = y_tr.shape[0]/(2*np.count_nonzero(y_tr[:,:,i]==1))
+        #negative_weights[i] = y_tr.shape[0]/(2*np.count_nonzero(y_tr[:,:,i]==0))
+    return F
 
 def binary_CE_weighted(y_true, y_pred):
     """Weighted custom loss, two options for the weights: 
@@ -75,11 +75,12 @@ def binary_CE_weighted(y_true, y_pred):
     return loss
 
 def train_te_val_split(X, Y, ratio_tr_te = 0.2):
-    """Build train validation test splits from raw data
+    """Builds train validation test splits from raw data
     Argument: Raw matrices X and Y (3D)
-    Return: processed train and test sets"""
+    Returns: processed train and test sets"""
     X_processed = preprocess(X)
     x_tr, x_te, y_tr, y_te = train_test_split(X_processed, Y, test_size = ratio_tr_te, random_state = 200)
+    #x_tr, x_te, y_tr, y_te = train_test_split(X, Y, test_size = ratio_tr_te, random_state = 200)
     x_tr, x_val, y_tr, y_val = train_test_split(x_tr, y_tr, test_size = ratio_tr_te, random_state = 200)
     #get_labels_prop(y_val)
     return [x_tr, y_tr], [x_te, y_te], [x_val, y_val]
