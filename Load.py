@@ -5,9 +5,9 @@ import os
 
 #load the pose files from a given folder
 def load_file_x(folder):
-    """Load pose files (.hf5) from folder in data_fly data folder
+    """Loads pose files (.hf5) from folder in data_fly data folder
     Arguments: folder (should be as follow from current directory : data_fly/folder)
-    Return: panda DataFrame of size 720 x 75 (75 features)"""
+    Returns: panda DataFrame of size 720 x 75 (75 features)"""
     
     scorer='DeepCut_resnet50_FlyMar16shuffle0_500000' #scorer to load poses
     pose=DC = pd.read_hdf(os.path.join('data_fly',folder,folder+scorer+'.h5'), 'df_with_missing')
@@ -15,18 +15,18 @@ def load_file_x(folder):
 
 #load the annotation files
 def load_file_y(folder):
-    """Load annotation files (.csv)
+    """Loads annotation files (.csv)
     Argument: folder (should be as follow from current directory : data_fly/folder)
-    Return: panda Data Frame with 720 rows and 8 columns"""
+    Returns: panda Data Frame with 720 rows and 8 columns"""
     annotation = pd.read_csv(os.path.join('data_fly',folder,'all_ann.csv'),header=None).T
     annotation = expand(annotation) #reshape annotation, adding a category and merging two labels
     return annotation
 
 #expand to 8 categories
 def expand(vect):
-    """Expand an annotation vector from 7 to 8 categories and merge two labels
+    """Expands an annotation vector from 7 to 8 categories and merges two labels
     Argument: annotation panda data frame of size 720 x 7
-    Return: expanded data frame"""
+    Returns: expanded data frame"""
     y = vect
     #create idle category as 8th category
     y.insert(7,7,0)
@@ -39,9 +39,9 @@ def expand(vect):
 
 #create data set
 def load_all(fold_list):
-    """Create overall data set
+    """Creates overall data set
     Argument: list of folders within data_fly/
-    Return: Features vector (np.array) of size 145 (datapoints) x 720 (time frames) x 75 (features)
+    Returns: Features vector (np.array) of size 145 (datapoints) x 720 (time frames) x 75 (features)
             Labels vector(np.array) of size 145 x 720 x 8 (categories)"""
     x = list()
     y = list()
