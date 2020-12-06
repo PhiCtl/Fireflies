@@ -2,6 +2,8 @@ import h5py
 import numpy as np
 import pandas as pd
 import os
+from Utils import preprocess
+from tensorflow.keras.backend import expand_dims
 
 #load the pose files from a given folder
 def load_file_x(folder):
@@ -61,3 +63,16 @@ def load_training_data():
     dir_list.remove('.ipynb_checkpoints')
     folders = dir_list
     return load_all(folders)
+
+def load_test_data(folder_name):
+  """Loads test data for final prediction
+     Arguments: folder_name containing pose tracking file  and annotated file
+                should be contained in data_fly folder
+     Returns: 3D preprocessed X and 3D Y for predictions"""
+
+  X = load_file_x(folder_name)
+  Y = load_file_y(folder_name)
+  X = preprocess(X)
+  if len(X.shape) < 3:
+    return expand_dims(X,0), expand_dims(Y,0)
+  return X, Y

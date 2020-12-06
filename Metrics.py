@@ -60,6 +60,48 @@ def summarize_scores(scores, names):
     m,s = np.mean(score), np.std(score)
     print(name, ': %.3f%% (+/-%.3f)' %(m,s))
 
+def LevenshteinDistance(a, b):
+    """From Wagner-Fischer algorithm (source: wikipedia)
+       Computes edit distance between two strings of length n and m
+       Min number of operations (insertions, deletions, substitutions)
+       To turn a into b
+    Arguments: a is the source of length m
+               b is the target of length n
+    Returns :  d matrix of edit-distance"""
+    m = len(a)
+    n = len(b)
+    d = np.zeros((m+1,n+1))
+    
+    #if target is empty, source can be turned into target by dropping character
+    for i in np.arange(1,m+1):
+        d[i,0] = i
+    #if source is empty, source can be turned into target by inserting character
+    for j in np.arange(1,n+1):
+        d[0,j] = j
+        
+    for j in np.arange(0, n):
+        for i in np.arange(0, m):
+            substCost = 0
+            if (a[i] != b[j]):
+                substCost = 1
+            #the min distance between two strings of length i and j is the
+            #min between deleting, inserting or subsituting
+            d[i,j] = min(d[i-1,j] + 1, d[i,j-1] + 1, d[i-1, j-1] + substCost)
+    
+    return d
+
+def LevDistMultilabels(y_pred, y_true):
+    """Computes edit distance between y_pred and y_true
+    Argument: 2D y_pred of dim(number of time steps, number of categories)
+              2D y_true of same dimensions
+    Returns: edit distance per label"""
+    
+    n = y_pred.shape[1]
+    D = np.zeros(8)
+    for i in range(y_pred.shape[2]):
+        D[i] = LevenshteinDistance(y_pred, y_true)[n+1, n+1]
+    return D
+
 def custom_scoring(y_true, y_pred):
   """Custom scores for predict function
      Arguments: y_true :ground truth label vector (2D flattened)

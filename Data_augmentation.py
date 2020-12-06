@@ -45,6 +45,7 @@ def offset(x):
     """Adds gaussian noise to features vector
     Argument: (3D) features vector x
     Returns: perturbed positions"""
+    np.random.seed(123)
     t = np.random.normal()
     n_features = np.int(x.shape[2]/3)
     for j in range(n_features): 
