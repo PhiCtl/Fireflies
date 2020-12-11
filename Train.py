@@ -7,8 +7,8 @@ import random as python_random
 
 from tensorflow.keras import optimizers, regularizers
 from tensorflow.keras.backend import reshape, clear_session
-from keras.layers import Dense, Bidirectional, Flatten, Dropout, LSTM
-from keras.models import Sequential
+from keras.layers import Dense, Bidirectional, Flatten, Dropout, LSTM, LeakyReLU
+from keras.models import Sequential, load_model
 from keras.utils import to_categorical
 from focal_loss import BinaryFocalLoss
 from plot_keras_history import plot_history
@@ -17,7 +17,7 @@ from Utils import *
 from Metrics import* 
 
 
-def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2, node = 100, dropout = 0.2, m_type = 1, CV = True):
+def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2, node = 600, dropout = 0.1, m_type = 1, CV = True):
     """ Runs several experiments and averages the results
     Arguments: (x_tr, y_tr) training set
                (x_te, y_te) test set
@@ -34,25 +34,29 @@ def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2, node = 100, dropou
     Prints the average weighted, macro and proportional F1 score, mean F1 score, 
     precision, recall per label, and loss evolution
                   """
-
+    #booléen tCN / LSTM
+    #probm prediction recall tabs
+    #wf1_
     f1_scores = list()
     acc_scores = list()
     loss_scores = list()
     train = pd.DataFrame()
     val = pd.DataFrame()
-    tab = np.zeros((1,8))
+    tab = []
     tab1 = np.zeros((1,8))
     tab2 = np.zeros((1,8))
 
     if not CV:
+      print("Training versus test")
       x_1, x_2, y_1, y_2 = x_tr, x_te, y_tr, y_te
 
     for r in range(repeats):
         #if cross validation folds (5 folds)
         if CV:
+          print("Cross validation")
           x_1, x_2, y_1, y_2 = train_test_split(x_tr, y_tr, test_size = 0.2)
         
-        hist, loss, accuracy, wf1, wf1_, mf1, F1_tab, Ptab, Rtab = evaluate_model(x_1, y_1, x_2, y_2, nodes_nb = node, drop = dropout)
+        hist, loss, accuracy, wf1, wf1_, mf1, F1_tab, Ptab, Rtab = evaluate_model(x_1, y_1, x_2, y_2, nodes_nb = node, drop = dropout, model_type = m_type)
         wf1 = wf1 * 100.0
         mf1 = mf1 * 100.0
         wf1_ = wf1_ * 100.0
@@ -60,7 +64,7 @@ def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2, node = 100, dropou
         f1_scores.append([wf1, mf1, wf1_])
         acc_scores.append(accuracy)
         loss_scores.append(loss)
-        tab += F1_tab
+        tab.append(F1_tab)
         tab1 += Ptab
         tab2 += Rtab
         train[str(r)] = hist.history['loss']
@@ -68,7 +72,7 @@ def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2, node = 100, dropou
 
     f1_scores = np.array(f1_scores)
     summarize_scores([f1_scores[:,0], f1_scores[:,1], f1_scores[:,2], acc_scores, loss_scores], ['weighted F1 score', 'Macro F1 score', 'Proportional F1 score', 'Accuracy', 'Loss'])
-    print("Mean F1 score per label: ", tab/repeats)
+    print("Mean F1 score per label: ", np.mean(np.array(tab), axis = 0))
     print("Mean precision per label: ", tab1/repeats)
     print("Mean recall per label: ", tab2/repeats)
     plt.plot(train, color='blue', label='train')
@@ -77,11 +81,9 @@ def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2, node = 100, dropou
     plt.ylabel('Focal loss')
     plt.xlabel('epoch')
     plt.show()
-
-    if not CV:
-      return f1_scores
+    return f1_scores, tab
     
-def evaluate_model(x_tr, y_tr, x_te, y_te, model_type = 1, gamma=2, nodes_nb=100, drop = 0.2, epochs = 200, verbose = 0, plot = 0, single_run = 0):
+def evaluate_model(x_tr, y_tr, x_te, y_te, model_type = 1, gamma=2, nodes_nb=600, drop = 0.1, epochs = 200, verbose = 0, plot = 0, single_run = 0):
     """Training function, to evaluate train set against test set or train set againts validation set
         Arguments: (x_tr, y_tr) training data
                    (x_te, y_te) testing/validation data
@@ -126,6 +128,7 @@ def evaluate_model(x_tr, y_tr, x_te, y_te, model_type = 1, gamma=2, nodes_nb=100
       model.add(Bidirectional(LSTM(nodes_nb,input_shape = (None, n_features), return_sequences = True)))#, kernel_regularizer = regularizers.l1_l2(l1=1e-6, l2=1e-5))))
       model.add(Dropout(drop))
       model.add(Dense(n_outputs, activation = 'sigmoid'))
+      #model.add(Dense(n_outputs, activation = LeakyReLU(0.01)))
     if model_type == 2:
       model.add(Bidirectional(LSTM(nodes_nb,input_shape = (None, n_features), return_sequences = True)))
       model.add(Dropout(drop))
@@ -181,7 +184,7 @@ def evaluate_model(x_tr, y_tr, x_te, y_te, model_type = 1, gamma=2, nodes_nb=100
     if verbose :
       print(" -> Accuracy: ", accuracy, "; Mean of labelwise accuracy: ", np.mean(acc_tab))
       print("Per label accuracy: ", acc_tab)
-      print("-> Weighted F1 score: ", wf1_)
+      print("-> Proportional F1 score: ", wf1_, "; Weighted F1 score: ", wf1, "; Macro F1 score: ", mf1)
       print("-> F1 score per label: ", F1_tab)
       print("-> Precision: ", P, "; Recall: ", R)
       print("-> Precision per label: ", Ptab)

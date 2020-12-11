@@ -102,7 +102,7 @@ def LevDistMultilabels(y_true, y_pred):
         D += LevenshteinDistance(y_pred[i,:], y_true[i,:])[-1, -1]
     return D/n
 
-def custom_scoring(y_true, y_pred):
+def custom_scoring(y_te, y_pred):
   """Custom scores for predict function
      Arguments: y_true :ground truth label vector (2D flattened)
                 y_pred: predicted labels vector (2D flattened)
@@ -132,10 +132,10 @@ def custom_scoring(y_true, y_pred):
   f.reset_states()
 
   ##EDIT DISTANCE
-  edit_dist_av = LevDistMultilabels(y_true, y_pred)
+  #edit_dist_av = LevDistMultilabels(y_true, y_pred)
 
   ##ACCURACY
   #evaluate accuracy per label
-  acc_tab = Acc(y_te, y_pred, w)
+  acc_tab = Acc(y_te, y_pred)
 
-  return wf1, mf1, pf1, F1_tab, Ptab, Rtab, acc_tab, edit_dist_av
+  return wf1, mf1, pf1, F1_tab, Ptab, Rtab, acc_tab
