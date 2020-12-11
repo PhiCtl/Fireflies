@@ -76,13 +76,13 @@ def binary_CE_weighted(y_true, y_pred):
 
 def train_te_val_split(X, Y, ratio_tr_te = 0.2):
     """Builds train validation test splits from raw data
-    Argument: Raw matrices X and Y (3D)
+    Argument: raw matrices X and Y (3D)
     Returns: processed train and test sets"""
-    X_processed = preprocess(X)
-    x_tr, x_te, y_tr, y_te = train_test_split(X_processed, Y, test_size = ratio_tr_te, random_state = 200)
-    #x_tr, x_te, y_tr, y_te = train_test_split(X, Y, test_size = ratio_tr_te, random_state = 200)
+    X = preprocess(X)
+  
+    x_tr, x_te, y_tr, y_te = train_test_split(X, Y, test_size = ratio_tr_te, random_state = 200)
     x_tr, x_val, y_tr, y_val = train_test_split(x_tr, y_tr, test_size = ratio_tr_te, random_state = 200)
-    #get_labels_prop(y_val)
+    
     return [x_tr, y_tr], [x_te, y_te], [x_val, y_val]
    
 

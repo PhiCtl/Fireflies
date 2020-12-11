@@ -70,13 +70,13 @@ def LevenshteinDistance(a, b):
     Returns :  d matrix of edit-distance"""
     m = len(a)
     n = len(b)
-    d = np.zeros((m+1,n+1))
+    d = np.zeros((m,n))
     
     #if target is empty, source can be turned into target by dropping character
-    for i in np.arange(1,m+1):
+    for i in np.arange(1,m):
         d[i,0] = i
     #if source is empty, source can be turned into target by inserting character
-    for j in np.arange(1,n+1):
+    for j in np.arange(1,n):
         d[0,j] = j
         
     for j in np.arange(0, n):
@@ -90,17 +90,17 @@ def LevenshteinDistance(a, b):
     
     return d
 
-def LevDistMultilabels(y_pred, y_true):
+def LevDistMultilabels(y_true, y_pred):
     """Computes edit distance between y_pred and y_true
-    Argument: 2D y_pred of dim(number of time steps, number of categories)
-              2D y_true of same dimensions
-    Returns: edit distance per label"""
+    Arguments: 2D y_true of same dimensions as below
+               2D y_pred of dim(number of time steps, number of categories)
+    Returns: mean edit distance"""
     
-    n = y_pred.shape[1]
-    D = np.zeros(8)
-    for i in range(y_pred.shape[2]):
-        D[i] = LevenshteinDistance(y_pred, y_true)[n+1, n+1]
-    return D
+    n = y_pred.shape[0]
+    D = 0
+    for i in range(n):
+        D += LevenshteinDistance(y_pred[i,:], y_true[i,:])[-1, -1]
+    return D/n
 
 def custom_scoring(y_true, y_pred):
   """Custom scores for predict function
@@ -108,17 +108,20 @@ def custom_scoring(y_true, y_pred):
                 y_pred: predicted labels vector (2D flattened)
      Returns: weighted f1 score
               macro f1 score
+              proportional f1 score
               F1 score per label
               precision per label
               recall per label
-              accuracy per label """
+              accuracy per label
+              edit distance average """
+  #weights computed with training data set
   w = np.array([0.02409584, 0.00787456, 0.03685528, 0.01760536, 0.04589969, 0.8483942 , 0.01724058, 0.00203449]);
   
   ## F1 SCORES
   #evaluate F1 score, precision and recall for each label, 
   #along with custom proportionally weighted F1 score
   #and built in weighted and macro F1 scores
-  F1_tab, Ptab, Rtab, _ = F1_score(y_te, y_pred, w)
+  F1_tab, Ptab, Rtab, pf1 = F1_score(y_te, y_pred, w)
   f = F1Score(8, threshold = 0.5, average = 'weighted')
   f.update_state(y_te, y_pred)
   wf1 = f.result().numpy() #weighted f1 score
@@ -128,8 +131,11 @@ def custom_scoring(y_true, y_pred):
   mf1 = f.result().numpy() #macro f1 score
   f.reset_states()
 
+  ##EDIT DISTANCE
+  edit_dist_av = LevDistMultilabels(y_true, y_pred)
+
   ##ACCURACY
   #evaluate accuracy per label
   acc_tab = Acc(y_te, y_pred, w)
 
-  return wf1, mf1, F1_tab, Ptab, Rtab, acc_tab
+  return wf1, mf1, pf1, F1_tab, Ptab, Rtab, acc_tab, edit_dist_av
