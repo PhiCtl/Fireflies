@@ -43,36 +43,12 @@ def class_weights(y_tr):
     """Computes the proportional weights
     Argument: training Y vector (3D)
     Return: Proportional weights"""
-    #positive_weights = {}
-    #negative_weights = {}
     F = 1/get_labels_prop(y_tr)
     tot = 0
     for el in F:
         tot += el
     F = F/tot
-    #print("check: ", np.sum(F))
-    #for i in range(8):
-        #positive_weights[i] = y_tr.shape[0]/(2*np.count_nonzero(y_tr[:,:,i]==1))
-        #negative_weights[i] = y_tr.shape[0]/(2*np.count_nonzero(y_tr[:,:,i]==0))
     return F
-
-def binary_CE_weighted(y_true, y_pred):
-    """Weighted custom loss, two options for the weights: 
-    [positive and negative], or [inversely proportional to label distribution], see weights computation above
-    Argument: ground truth Y, predicted Y
-    Return: weighted binary cross entropy"""
-    pos = [0.013478341699200595, 0.004400339888322408, 0.020631758679567444, 0.009843856076035303, 0.025709219858156027, 0.5, 0.009639675575056508, 0.0011364705144684454]
-    neg = [0.0007321679239757224, 0.0008245757699831673, 0.00071863291239617, 0.0007471530890915649, 0.0007137231738531207, 0.0006954102920723226, 0.0007483561969054181, 0.0017854504260454121]
-    
-    loss = 0
-    y_pred = y_pred > 0.5
-    y_pred = tf.cast(y_pred, tf.int64)
-    print(y_pred)
-    for i in range(8):
-        loss -= pos[i]*y_true[:,:,i]*K.log(y_pred[:,:,i]) + neg[i]*(1-y_true[:,:,i])*K.log(1-y_pred[:,:,i])
-        #loss -= w[i] * (y_true[:,:,i]*K.log(y_pred[:,:,i]) + (1-y_true[:,:,i])*K.log(1-y_pred[:,:,i]))
-        
-    return loss
 
 def train_te_val_split(X, Y, ratio_tr_te = 0.2):
     """Builds train validation test splits from raw data
@@ -84,5 +60,55 @@ def train_te_val_split(X, Y, ratio_tr_te = 0.2):
     x_tr, x_val, y_tr, y_val = train_test_split(x_tr, y_tr, test_size = ratio_tr_te, random_state = 200)
     
     return [x_tr, y_tr], [x_te, y_te], [x_val, y_val]
-   
+
+def time_window_sample(x, y, T):
+      """ Expand the features by adding the data T/2 before and T/2 after a specific time step
+    Arguments: x set of features 3D
+               y set of label 3D
+               T number of time steps of the chosen time window, should be a multiple of 2
+                  """
+    nb_samples=x.shape[0]
+    nb_frames=x.shape[1] 
+    nb_features=x.shape[2]
+    T_=int(np.floor(T/2))
+    new_X=np.zeros((nb_samples,nb_frames-T,(T_*2+1)*nb_features))
+    new_Y=np.zeros((nb_samples,nb_frames-T,y.shape[2]))
+    for k in range(0,nb_samples):
+        new_Y[k,:,:]=y[k,T_:nb_frames-T_]
+        for i in range(T_,nb_frames-T):
+            x_t=x[k,i-T_:i+T_+1,:] ##select columns of x between i-T/2 and i+T/2
+            X_T=x_t.reshape(-1)  ##linearize time window
+            new_X[k,i,:]=X_T    ##columns of new_X are composed of linearized X_T
+        
+    return new_X,new_Y
+
+def feature_expansion(x):
+    """ Add the velocity in x and y between two consecutive frames to the features, and the distance between two consecutive body parts x positions, which doubles the amount of features
+    Arguments:x the features vector to expand
+    
+                  """
+    ##to do:augment features with distance between 2 consecutive points and velocities
+    nb_samples=x.shape[0]
+    nb_frames=x.shape[1] 
+    nb_features=x.shape[2]
+    new_X=np.empty([nb_samples,nb_frames,nb_features*2])
+        
+    for k in range(0,nb_samples):
+        for i in range(0, nb_frames-1):
+            l=0;
+            for j in range(0,nb_features*2-6, 6):
+                d_x=abs(x[k,i,l]-x[k,i,l+3]);
+                v_x=x[k,i+1,l]-x[k,i,l]/time_step
+                v_y=x[k,i+1,l+1]-x[k,i,l+1]/time_step
+                
+                new_X[k,i,j]=x[k,i,l]
+                new_X[k,i,j+1]=x[k,i,l+1]
+                new_X[k,i,j+2]=x[k,i,l+2]
+                l+=3;
+                #print(l)
+                new_X[k,i,j+3]=d_x
+                new_X[k,i,j+4]=v_x
+                new_X[k,i,j+5]=v_y
+    new_X=new_X[:,:,0:new_X.shape[2]-6]
+    return new_X 
 
