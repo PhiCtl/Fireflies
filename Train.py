@@ -4,6 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import random as python_random
+import joblib
 
 from tensorflow.keras import optimizers, regularizers
 from tensorflow.keras.backend import reshape, clear_session
@@ -16,8 +17,14 @@ from plot_keras_history import plot_history
 from Utils import *
 from Metrics import* 
 
+from sklearn import metrics
+import seaborn as sn
 
-def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2, node = 600, dropout = 0.1, m_type = 1, CV = True):
+# Import the model we are using
+from sklearn.ensemble import RandomForestClassifier
+
+
+def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2, node = 600, dropout = 0.1, m_type = 1, LSTM = True, TCN = False, CV = True):
     """ Runs several experiments and averages the results
     Arguments: (x_tr, y_tr) training set
                (x_te, y_te) test set
@@ -34,8 +41,6 @@ def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2, node = 600, dropou
     Prints the average weighted, macro and proportional F1 score, mean F1 score, 
     precision, recall per label, and loss evolution
                   """
-    #booléen tCN / LSTM
-    #probm prediction recall tabs
     #wf1_
     f1_scores = list()
     acc_scores = list()
@@ -43,8 +48,6 @@ def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2, node = 600, dropou
     train = pd.DataFrame()
     val = pd.DataFrame()
     tab = []
-    tab1 = np.zeros((1,8))
-    tab2 = np.zeros((1,8))
 
     if not CV:
       print("Training versus test")
@@ -56,7 +59,10 @@ def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2, node = 600, dropou
           print("Cross validation")
           x_1, x_2, y_1, y_2 = train_test_split(x_tr, y_tr, test_size = 0.2)
         
-        hist, loss, accuracy, wf1, wf1_, mf1, F1_tab, Ptab, Rtab = evaluate_model(x_1, y_1, x_2, y_2, nodes_nb = node, drop = dropout, model_type = m_type)
+        if LSTM:
+          hist, loss, accuracy, wf1, wf1_, mf1, F1_tab, Ptab, Rtab = evaluate_model(x_1, y_1, x_2, y_2, nodes_nb = node, drop = dropout, model_type = m_type)
+        if TCN:
+          #TCN
         wf1 = wf1 * 100.0
         mf1 = mf1 * 100.0
         wf1_ = wf1_ * 100.0
@@ -65,16 +71,12 @@ def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2, node = 600, dropou
         acc_scores.append(accuracy)
         loss_scores.append(loss)
         tab.append(F1_tab)
-        tab1 += Ptab
-        tab2 += Rtab
         train[str(r)] = hist.history['loss']
         val[str(r)] = hist.history['val_loss']
 
     f1_scores = np.array(f1_scores)
     summarize_scores([f1_scores[:,0], f1_scores[:,1], f1_scores[:,2], acc_scores, loss_scores], ['weighted F1 score', 'Macro F1 score', 'Proportional F1 score', 'Accuracy', 'Loss'])
     print("Mean F1 score per label: ", np.mean(np.array(tab), axis = 0))
-    print("Mean precision per label: ", tab1/repeats)
-    print("Mean recall per label: ", tab2/repeats)
     plt.plot(train, color='blue', label='train')
     plt.plot(val, color='orange', label='test')
     plt.title('model train vs test loss')
@@ -197,6 +199,34 @@ def evaluate_model(x_tr, y_tr, x_te, y_te, model_type = 1, gamma=2, nodes_nb=600
 
     return hist, loss, accuracy, wf1, wf1_, mf1, F1_tab, Ptab, Rtab
 
+def build_model_RF(X,Y):
+    
+    #train and test split
+    x_tr, x_te, y_tr, y_te = train_test_split(X, Y, test_size = 0.2, random_state = 200)
+
+    #feature expansion
+    x_tr_expanded=feature_expansion(x_tr)
+    x_te_expanded=feature_expansion(x_te)
+
+    #time window flattening
+    x_tr_expanded,y_tr_t=time_window_sample(x_tr_expanded, y_tr, 120)
+    x_te_expanded,y_te_t=time_window_sample(x_te_expanded, y_te, 120)
+
+    #reshape into one video
+    x_tr_reshaped=np.reshape(x_tr_expanded, (x_tr_expanded.shape[0]*x_tr_expanded.shape[1],x_tr_expanded.shape[2]))
+    y_tr_reshaped=np.reshape(y_tr_t, (y_tr_t.shape[0]*y_tr_t.shape[1],y_tr_t.shape[2]))
+    
+
+    x_te_reshaped=np.reshape(x_te_expanded, (x_te_expanded.shape[0]*x_te_expanded.shape[1],x_te_expanded.shape[2]))
+    y_te_reshaped=np.reshape(y_te_t, (y_te.shape[0]*y_te_t.shape[1],y_te_t.shape[2]))
+    
+    #train classifier
+    clf = RandomForestClassifier(n_estimators=10, criterion = 'gini', max_depth=10, random_state = 42)
+    clf.fit(x_tr_reshaped,y_tr_reshaped)
+    
+    #save model
+    joblib.dump(clf, "./random_forest.joblib")
+
 def predict(X,Y, flag, batch_size = 32, epochs = 200):
   """ Predicts labels for X given and compares predictions to ground truth Y
       Arguments: (X,Y) data and corresponding labels, 
@@ -224,7 +254,23 @@ def predict(X,Y, flag, batch_size = 32, epochs = 200):
   
   #if flag == "TCN":
 
-  #else:
+  if flag == "Random Forest":
+    
+    ##Load MODEL
+    loaded_rf = joblib.load("./random_forest.joblib")
+    
+    #feature expansion
+    X_expanded=feature_expansion(X)
+
+    #time window flattening
+    X_expanded,Y=time_window_sample(X_expanded, Y, 120)
+    
+    #reshape into one video
+    X_reshaped=np.reshape(X_expanded, (X_expanded.shape[0]*X_expanded.shape[1],X_expanded.shape[2]))
+    y_te =np.reshape(Y, (Y.shape[0]*Y.shape[1],Y.shape[2]))
+    
+    ##prediction
+    y_pred=loaded_rf.predict(X_reshaped)
 
 
   #customed predictions
