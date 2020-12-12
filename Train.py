@@ -197,38 +197,39 @@ def evaluate_model(x_tr, y_tr, x_te, y_te, model_type = 1, gamma=2, nodes_nb=600
 
     return hist, loss, accuracy, wf1, wf1_, mf1, F1_tab, Ptab, Rtab
 
-def predict(X,Y, model_name, batch_size = 32, epochs = 200):
+def predict(X,Y, flag, batch_size = 32, epochs = 200):
   """ Predicts labels for X given and compares predictions to ground truth Y
       Arguments: (X,Y) data and corresponding labels, 
                     X dim = (number of samples, number of timesteps, number of features = 75)
                     Y dim = (number of samples, number of timesteps, number of labels = 8)
-                  model_name: name of folder containing model architecture
-                    should be located in Results/ (relative path)
+                  flag: model to use
                   batch_size : should be set to 1 if only 1 sample
                   repeats: the averaged scores are computed over #number of repeats since stochastic approach
       Prints scores and downloads prediction
   """
-
- 
-  ## LOAD MODEL
-  loaded_model = load_model('Results/'+model_name)
-  print("Loaded model from disk")
-
+  
   ##RESHAPE GROUND TRUTH Y
   y_te = reshape(Y, (Y.shape[0]*Y.shape[1],Y.shape[2]))
 
+  if flag == "LSTM":
+    ## LOAD MODEL
+    loaded_model = load_model('Results/opt_LSTM_model')
+    print("Loaded model from disk")
+    loaded_model.compile(loss=BinaryFocalLoss(2), optimizer = 'adam', metrics = [BinaryAccuracy(), Precision(), Recall(), FalseNegatives(), FalsePositives()])
+    #predict and reshape predictions
+    y_pred = loaded_model.predict(X, batch_size = batch_size)
+    y_pred = reshape(y_pred, (y_pred.shape[0]* y_pred.shape[1], 8))
+    #build-in predictions  
+    loss, accuracy, P, R, FN, FP = loaded_model.evaluate(X,Y, batch_size = batch_size)
   
-  loaded_model.compile(loss=BinaryFocalLoss(2), optimizer = 'adam', metrics = [BinaryAccuracy(), Precision(), Recall(), FalseNegatives(), FalsePositives()])
-  #predict and reshape predictions
-  y_pred = loaded_model.predict(X, batch_size = batch_size)
-  y_pred = reshape(y_pred, (y_pred.shape[0]* y_pred.shape[1], 8))
-    
+  #if flag == "TCN":
+
+  #else:
+
+
   #customed predictions
   wf1, mf1, pf1, F1_tab, Ptab, Rtab, acc_tab = custom_scoring(y_te, y_pred)
 
-  #build-in predictions
-    
-  loss, accuracy, P, R, FN, FP = loaded_model.evaluate(X,Y, batch_size = batch_size)
   print("F1 score per label: ", F1_tab)
   print("Precision per label: ", Ptab)
   print("Recall per label: ", Rtab)
@@ -237,41 +238,3 @@ def predict(X,Y, model_name, batch_size = 32, epochs = 200):
   y_pred = y_pred > 0.5
   print("Prediction will be saved into Results/")
   pd.DataFrame(y_pred, columns=["arch", "burrow + arch", "drag + arch", "groom","tap + arch","egg", "proboscis", "idle"]).to_csv('Results/LSTM_Annotation.csv')
-
-
-
-def cross_validation(X,Y, nodes, dropout = 0.2, gamma = 2):
-    """Validation function (on one run) for nodes number
-       Arguments: X, Y full data set
-                  nodes: range of possible neurons number (numpy array)
-                  gamma: focal loss parameter
-                  dropout: dropout value
-        Prints optimal node for weighted F1 Score, Macro F1 score and for the loss"""
-    f1_scores = list()
-    acc_scores = list()
-    loss_scores = list()
-
-    for n in nodes:
-        hist, loss, accuracy, wf1, wf1_, mf1, F1_tab, Ptab, Rtab = evaluate_model(x_tr, y_tr, x_te, y_te, nodes_nb = n, drop = dropout)
-        wf1 = wf1 * 100.0
-        mf1 = mf1 * 100.0
-        accuracy = accuracy * 100.0
-        #print('Node, wf1, mf1, accuracy')
-        print('>%d: %.3f %.5g %.5a' %(n, wf1, mf1, accuracy))
-        print('Loss:', loss)
-        f1_scores.append([wf1, mf1])
-        acc_scores.append(accuracy)
-        loss_scores.append(loss)
-        print("F1 score per label: ", F1_tab)
-        print("Precision per label: ", Ptab)
-        print("Recall per label: ", Rtab)
-    f1_scores = np.array(f1_scores)
-    loss_scores = np.array(loss_scores)
-    opt_wf1 = nodes[np.argmax(f1_scores[:,0])]
-    opt_mf1 = nodes[np.argmax(f1_scores[:,1])]
-    opt_loss = nodes[np.argmin(loss_scores)] 
-
-    print("Optimal node with respect to macro F1 score : ", opt_wf1)
-    print("Optimal node with respect to weighted F1 score : ", opt_mf1)   
-    print("Optimal node with respect to loss : ", opt_loss)    
-
