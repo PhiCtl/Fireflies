@@ -252,7 +252,16 @@ def predict(X,Y, flag, batch_size = 32, epochs = 200):
     #build-in predictions  
     loss, accuracy, P, R, FN, FP = loaded_model.evaluate(X,Y, batch_size = batch_size)
   
-  #if flag == "TCN":
+  if flag == "TCN":
+    loaded_model = load_model('Results/opt_TCN_model')
+    print("Loaded model from disk")
+    loaded_model.compile(optimizer='adam', loss=BinaryFocalLoss(gamma), metrics=[BinaryAccuracy(), Precision(), Recall(), FalseNegatives(), FalsePositives()])
+    
+    #predict and reshape predictions
+    y_pred = loaded_model.predict(X, batch_size = batch_size)
+    y_pred = reshape(y_pred, (y_pred.shape[0]* y_pred.shape[1], 8))
+    #build-in predictions  
+    loss, accuracy, P, R, FN, FP = loaded_model.evaluate(X,Y, batch_size = batch_size)
 
   if flag == "Random Forest":
     
