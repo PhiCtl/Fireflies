@@ -255,7 +255,7 @@ def predict(X,Y, flag, batch_size = 32, epochs = 200):
   if flag == "TCN":
     loaded_model = load_model('Results/opt_TCN_model')
     print("Loaded model from disk")
-    loaded_model.compile(optimizer='adam', loss=BinaryFocalLoss(gamma), metrics=[BinaryAccuracy(), Precision(), Recall(), FalseNegatives(), FalsePositives()])
+    loaded_model.compile(optimizer='adam', loss=BinaryFocalLoss(5), metrics=[BinaryAccuracy(), Precision(), Recall(), FalseNegatives(), FalsePositives()])
     
     #predict and reshape predictions
     y_pred = loaded_model.predict(X, batch_size = batch_size)
