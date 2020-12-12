@@ -292,4 +292,5 @@ def predict(X,Y, flag, batch_size = 32, epochs = 200):
   
   y_pred = y_pred > 0.5
   print("Prediction will be saved into Results/")
-  pd.DataFrame(y_pred, columns=["arch", "burrow + arch", "drag + arch", "groom","tap + arch","egg", "proboscis", "idle"]).to_csv('Results/LSTM_Annotation.csv')
+  name = 'Results/'+flag+'/Annotation.csv'
+  pd.DataFrame(y_pred, columns=["arch", "burrow + arch", "drag + arch", "groom","tap + arch","egg", "proboscis", "idle"]).to_csv(name)
