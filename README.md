@@ -17,6 +17,7 @@ $ !pip install plot_keras_history
 ```
 
 ## Predictions
+-> run fifi
 
 
 ## Notebooks
