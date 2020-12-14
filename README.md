@@ -37,7 +37,6 @@ If one wants to make predictions using one of our model, the run.py file  should
 
 ### LSTM model training
 This notebook offers several functionalities
-* Building and training an LSTM / bidirectional LSTM model on training data set, evaluating it against validation set.
-- several formats of datasets can be built.
+* Building and training an LSTM / bidirectional LSTM model on training data set, evaluating it against validation set. Several formats of datasets can be built.
 * Cross validating the different hyperparameters
 * Making predictions of the hold out test set
