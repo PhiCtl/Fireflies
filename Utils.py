@@ -62,7 +62,7 @@ def train_te_val_split(X, Y, ratio_tr_te = 0.2):
     return [x_tr, y_tr], [x_te, y_te], [x_val, y_val]
 
 def time_window_sample(x, y, T):
-      """ Expand the features by adding the data T/2 before and T/2 after a specific time step
+    """ Expand the features by adding the data T/2 before and T/2 after a specific time step
     Arguments: x set of features 3D
                y set of label 3D
                T number of time steps of the chosen time window, should be a multiple of 2
