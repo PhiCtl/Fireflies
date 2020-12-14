@@ -6,36 +6,47 @@ import tensorflow as tf
 import random as python_random
 import joblib
 
-from tensorflow.keras import optimizers, regularizers
+from Utils import *
+from Metrics import* 
+
+from tensorflow import keras
+from tensorflow.keras import optimizers, regularizers,Input, Model
 from tensorflow.keras.backend import reshape, clear_session
-from keras.layers import Dense, Bidirectional, Flatten, Dropout, LSTM, LeakyReLU
+from keras.layers import Dense, Bidirectional, Flatten, Dropout, LSTM, LeakyReLU,Activation
 from keras.models import Sequential, load_model
 from keras.utils import to_categorical
 from focal_loss import BinaryFocalLoss
 from plot_keras_history import plot_history
 
-from Utils import *
-from Metrics import* 
 
 from sklearn import metrics
 import seaborn as sn
 
 # Import the model we are using
 from sklearn.ensemble import RandomForestClassifier
+from tcn import *
 
 
-def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2, node = 600, dropout = 0.1, m_type = 1, LSTM = True, TCN = False, CV = True):
+
+
+
+
+
+
+def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2,epochs=2, node = 600, dropout = 0.1, m_type = 1, LSTM = True, TCN = False, CV = True):
     """ Runs several experiments and averages the results
     Arguments: (x_tr, y_tr) training set
                (x_te, y_te) test set
                repeats = number of training on which we average
                gamma = parameter for the focal loss
+               epochs= number of times, it passes through the training dataset.
                node = number of nodes of the neural network
                dropout = dropout value
                m_type = type of model to train/evaluate (on LSTM layers)
                         0: 1 LSTM layer model
                         1: 1 bidirectional LSTM layer model
                         2: 2 bidirectional LSTM layers model
+               LSTM/TCN boolean defines which model is used.
                CV = true if cross validation (then test set is left untouched)
                     false if repeated runs (then test set is used against whole train set)
     Prints the average weighted, macro and proportional F1 score, mean F1 score, 
@@ -61,8 +72,12 @@ def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2, node = 600, dropou
         
         if LSTM:
           hist, loss, accuracy, wf1, wf1_, mf1, F1_tab, Ptab, Rtab = evaluate_model(x_1, y_1, x_2, y_2, nodes_nb = node, drop = dropout, model_type = m_type)
+        
         if TCN:
-          #TCN
+             
+            hist, loss, accuracy, wf1,wf1_, mf1, F1_tab, Ptab, Rtab= evaluate_model_TCN(x_1, y_1, x_2, y_2, gamma,epochs)
+        
+        
         wf1 = wf1 * 100.0
         mf1 = mf1 * 100.0
         wf1_ = wf1_ * 100.0
@@ -74,6 +89,8 @@ def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2, node = 600, dropou
         train[str(r)] = hist.history['loss']
         val[str(r)] = hist.history['val_loss']
 
+
+
     f1_scores = np.array(f1_scores)
     summarize_scores([f1_scores[:,0], f1_scores[:,1], f1_scores[:,2], acc_scores, loss_scores], ['weighted F1 score', 'Macro F1 score', 'Proportional F1 score', 'Accuracy', 'Loss'])
     print("Mean F1 score per label: ", np.mean(np.array(tab), axis = 0))
@@ -84,7 +101,8 @@ def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2, node = 600, dropou
     plt.xlabel('epoch')
     plt.show()
     return f1_scores, tab
-    
+
+
 def evaluate_model(x_tr, y_tr, x_te, y_te, model_type = 1, gamma=2, nodes_nb=600, drop = 0.1, epochs = 200, verbose = 0, plot = 0, single_run = 0):
     """Training function, to evaluate train set against test set or train set againts validation set
         Arguments: (x_tr, y_tr) training data
@@ -198,6 +216,108 @@ def evaluate_model(x_tr, y_tr, x_te, y_te, model_type = 1, gamma=2, nodes_nb=600
       plot_history(hist.history)
 
     return hist, loss, accuracy, wf1, wf1_, mf1, F1_tab, Ptab, Rtab
+
+def evaluate_model_TCN(x_tr, y_tr, x_te, y_te, gamma=2,epochs= 5, verbose = 0,plot = 0, single_run = 0):
+    """Training function, to evaluate train set against test set or train set againts validation set
+        Arguments: (x_tr, y_tr) training data
+                   (x_te, y_te) testing/validation data
+                   gamma: focal loss parameter
+                   epochs= number of times, it passes through the training dataset.
+                   verbose: if true, print all the metrics
+                   plot: if true, print built in plot
+                   single_run: fix random seed to ensure reproducibility
+                   
+          Returns: loss: Last binary focal loss value on test/validation set
+                  accuracy: accuracy on test/validation set 
+                  wf1: weighted F1 score
+                  wf1_: custom weighted F1 score (with proportional weights)
+                  mf1: macro F1 score 
+                  F1_tab: F1 score per label 
+                  Ptab: precision per label 
+                  Rtab: recall per label"""
+     
+    batch_size=1; 
+    w = class_weights(y_tr)
+    clear_session()
+    
+    if single_run:
+      np.random.seed(123)
+      python_random.seed(123)
+      tf.random.set_seed(1234)
+    
+    #-------------------------------------model definition---------------------------#
+    #Creation TCN object
+    Tcn=TCN(nb_filters=64,kernel_size=2,nb_stacks=1,dilations=(8,16,32,64,128,256,512,1024),return_sequences=True,
+activation=LeakyReLU(0.01),kernel_initializer='he_normal')
+
+    i = Input(batch_shape=(1,None,  x_tr.shape[2]))
+    o = Tcn(i)
+    o = Dense(200, activation=LeakyReLU(0.01), kernel_regularizer=keras.regularizers.l1_l2(0.00001))(o)
+    o = Dense(8, activation='sigmoid')(o)
+
+    model = Model(inputs=[i], outputs=[o])
+    model.compile(optimizer='adam', loss=BinaryFocalLoss(gamma), metrics=[BinaryAccuracy(), Precision(), Recall(), FalseNegatives(),FalsePositives()])
+    
+    model.summary()
+    
+    #---------------------fit network---------------------------------------------#
+    hist = model.fit(x_tr, y_tr, epochs = epochs, batch_size = batch_size, verbose = 0, validation_data = (x_te, y_te))
+    #---------------------------------evaluate model----------------------------------------------#
+    
+    #evaluate model on test set (over all classes)
+    loss, accuracy, P, R, FN, FP= model.evaluate(x_te, y_te, batch_size = batch_size, verbose = verbose)
+    
+    #save model
+    if single_run:
+        model.save('Results/opt_TCN_model')
+        print("Model saved to Results")
+        
+    y_pred = model.predict(x_te, batch_size = batch_size, verbose = 0)
+    y_pred[y_pred<0.5]=0.
+    y_pred[y_pred>0.5]=1.
+    
+    
+    y_pred = reshape(y_pred, (y_pred.shape[0]* y_pred.shape[1], 8))
+    y_te = reshape(y_te, (y_te.shape[0]*y_te.shape[1],8))
+
+    #evaluate F1 score for each label
+    F1_tab, Ptab, Rtab, wf1_ = F1_score(y_te, y_pred, w)
+    
+    #evaluate accuracy per label
+    acc_tab = Acc(y_te, y_pred)
+    print("-> F1 score per label: ", F1_tab)
+    print("-> y_pred " ,y_pred[:,4])
+   
+    #test f1 score built in
+    f = F1Score(8, threshold = 0.5, average = 'weighted')
+    f.update_state(y_te, y_pred)
+    wf1 = f.result().numpy()
+    print("weighted F1 score built in: ", wf1 )
+    f.reset_states()
+    f = F1Score(8, threshold = 0.5, average = 'macro')
+    f.update_state(y_te, y_pred)
+    mf1 = f.result().numpy()
+    print("macro F1 score built in: ", mf1 )
+    f.reset_states()
+
+    #-----------------------------------------print---------------------------------------------#
+
+    #print all
+    if verbose :
+      print(" -> Accuracy: ", accuracy, "; Mean of labelwise accuracy: ", np.mean(acc_tab))
+      print("Per label accuracy: ", acc_tab)
+      print("-> Weighted F1 score: ", wf1_)
+      print("-> F1 score per label: ", F1_tab)
+      print("-> Precision: ", P, "; Recall: ", R)
+      print("-> Precision per label: ", Ptab)
+      print("-> Recall per label: ", Rtab)
+      print("-> Loss: ", loss)
+
+    if plot:
+      plot_history(hist.history)
+
+    return hist, loss, accuracy, wf1,wf1_, mf1, F1_tab, Ptab, Rtab
+
 
 def build_model_RF(X,Y):
     
