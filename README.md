@@ -1,7 +1,7 @@
 # Supervised classification of fly behaviors from pose tracking data
 
 ## Table of contents
-* [Repository organization] (#Architecture)
+* [Architecture] (#Architecture)
 * [Installation](#Installation)
 * [Predictions](#Predictions)
 * [Notebooks](#Notebooks)
