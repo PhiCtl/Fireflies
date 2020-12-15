@@ -18,20 +18,12 @@ from keras.utils import to_categorical
 from focal_loss import BinaryFocalLoss
 from plot_keras_history import plot_history
 
-
 from sklearn import metrics
 import seaborn as sn
 
 # Import the model we are using
 from sklearn.ensemble import RandomForestClassifier
 from tcn import *
-
-
-
-
-
-
-
 
 def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2,epochs=2, node = 600, dropout = 0.1, m_type = 1, LSTM = True, TCN = False, CV = True):
     """ Runs several experiments and averages the results
@@ -145,10 +137,9 @@ def evaluate_model(x_tr, y_tr, x_te, y_te, model_type = 1, gamma=2, nodes_nb=600
       model.add(Dropout(drop))
       model.add(Dense(n_outputs, activation = 'sigmoid'))
     if model_type == 1:
-      model.add(Bidirectional(LSTM(nodes_nb,input_shape = (None, n_features), return_sequences = True)))#, kernel_regularizer = regularizers.l1_l2(l1=1e-6, l2=1e-5))))
+      model.add(Bidirectional(LSTM(nodes_nb,input_shape = (None, n_features), return_sequences = True)))
       model.add(Dropout(drop))
       model.add(Dense(n_outputs, activation = 'sigmoid'))
-      #model.add(Dense(n_outputs, activation = LeakyReLU(0.01)))
     if model_type == 2:
       model.add(Bidirectional(LSTM(nodes_nb,input_shape = (None, n_features), return_sequences = True)))
       model.add(Dropout(drop))
@@ -157,8 +148,6 @@ def evaluate_model(x_tr, y_tr, x_te, y_te, model_type = 1, gamma=2, nodes_nb=600
       model.add(Dense(n_outputs, activation = 'sigmoid'))
     
     model.compile(loss=BinaryFocalLoss(gamma), optimizer = 'adam', metrics = [BinaryAccuracy(), Precision(), Recall(), FalseNegatives(), FalsePositives()])
-    #model.compile(loss='binary_crossentropy', optimizer = 'adam', metrics = [BinaryAccuracy(), Precision(), Recall(), FalseNegatives(), FalsePositives()], loss_weights = w)
-    
     
     #------------------------------------fit network---------------------------------------------#
 
@@ -195,8 +184,6 @@ def evaluate_model(x_tr, y_tr, x_te, y_te, model_type = 1, gamma=2, nodes_nb=600
     mf1 = f.result().numpy()
     f.reset_states()
 
-    #edit distance
-    #edit_dist_av = LevDistMultilabels(y_te, y_pred)
 
     #-----------------------------------------print---------------------------------------------#
 
@@ -209,7 +196,6 @@ def evaluate_model(x_tr, y_tr, x_te, y_te, model_type = 1, gamma=2, nodes_nb=600
       print("-> Precision: ", P, "; Recall: ", R)
       print("-> Precision per label: ", Ptab)
       print("-> Recall per label: ", Rtab)
-      #print("-> Edit distance averaged: ", edit_dist_av)
       print("-> Loss: ", loss)
 
     if plot:
