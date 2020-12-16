@@ -78,3 +78,17 @@ The hyper parameters obtained by cross validation for best model predictions on 
 - Batch size: 32
 - Epochs: 200
 
+## Random Forest model training
+This notebook offers several functionalities
+* Building and training a random forest model on training data set, evaluating it against train set. 
+* Random search and grid search using cross validation in order to find the optimal hyperparameters
+
+###How to reproduce exactly the results on the test set
+The hyper parameters obtained by cross validation for best model predictions on train set are:
+- bootstrap
+- True
+- max_depth: 10
+- max_features: 'sqrt'
+- min_samples_leaf: 4
+- min_samples_split: 2
+- n_estimators: 10
