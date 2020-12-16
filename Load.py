@@ -6,21 +6,20 @@ from Utils import preprocess
 from tensorflow.keras.backend import expand_dims
 
 #load the pose files from a given folder
-def load_file_x(folder):
+def load_file_x(folder, scorer = 'DeepCut_resnet50_FlyMar16shuffle0_500000' ):
     """Loads pose files (.hf5) from folder in data_fly data folder
     Arguments: folder (should be as follow from current directory : data_fly/folder)
     Returns: panda DataFrame of size 720 x 75 (75 features)"""
     
-    scorer='DeepCut_resnet50_FlyMar16shuffle0_500000' #scorer to load poses
     pose=DC = pd.read_hdf(os.path.join('data_fly',folder,folder+scorer+'.h5'), 'df_with_missing')
     return pose
 
 #load the annotation files
-def load_file_y(folder):
+def load_file_y(folder, ann = 'all_ann.csv'):
     """Loads annotation files (.csv)
     Argument: folder (should be as follow from current directory : data_fly/folder)
     Returns: panda Data Frame with 720 rows and 8 columns"""
-    annotation = pd.read_csv(os.path.join('data_fly',folder,'all_ann.csv'),header=None).T
+    annotation = pd.read_csv(os.path.join('data_fly',folder,ann),header=None).T
     annotation = expand(annotation) #reshape annotation, adding a category and merging two labels
     return annotation
 
@@ -70,9 +69,16 @@ def load_test_data(folder_name):
                 should be contained in data_fly folder
      Returns: 3D preprocessed X and 3D Y for predictions"""
 
-  X = load_file_x(folder_name)
-  Y = load_file_y(folder_name)
+  X = load_file_x(folder_name, scorer = 'DLC_resnet50_FlyMar16shuffle0_500000')
+  Y = np.empty((0,8));
+  for ann in ['ann1.csv','ann2.csv','ann3.csv']:
+    y = load_file_y(folder_name, ann)
+    print(y.shape)
+    y = expand(y)
+    Y = np.vstack((Y,y))
+  print(Y.shape, X.shape)
+    
+  X = np.expand_dims(X,axis =0)
+  Y = np.expand_dims(Y, axis =0)
   X = preprocess(X)
-  if len(X.shape) < 3:
-    return expand_dims(X,0), expand_dims(Y,0)
   return X, Y
