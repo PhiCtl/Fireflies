@@ -12,7 +12,7 @@ Enter flag for model prediction: \n
 ##################################
 -> LSTM         : to make predictions with best LSTM model
 -> TCN          : to make predictions with best TCN model
--> Random Forest: to make predictions with best Random Forest model
+-> Random_Forest: to make predictions with best Random Forest model
 ##################################
 '''
 )
