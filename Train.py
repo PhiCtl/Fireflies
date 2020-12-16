@@ -124,9 +124,9 @@ def evaluate_model(x_tr, y_tr, x_te, y_te, model_type = 1, gamma=2, nodes_nb=600
     clear_session()
 
     if single_run:
-      np.random.seed(123)
-      python_random.seed(123)
-      tf.random.set_seed(1234)
+      np.random.seed(2020)
+      python_random.seed(2020)
+      tf.random.set_seed(2020)
 
     #-------------------------------------model definition-------------------------------------#
     model = Sequential()
