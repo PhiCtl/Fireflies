@@ -87,6 +87,7 @@ def feature_expansion(x):
     Arguments:x the features vector to expand
     
                   """
+    time_step=1/20;
     ##to do:augment features with distance between 2 consecutive points and velocities
     nb_samples=x.shape[0]
     nb_frames=x.shape[1] 
