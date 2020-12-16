@@ -83,7 +83,7 @@ This notebook offers several functionalities
 * Building and training a random forest model on training data set, evaluating it against train set. 
 * Random search and grid search using cross validation in order to find the optimal hyperparameters
 
-###How to reproduce exactly the results on the test set
+### How to reproduce exactly the results on the test set
 The hyper parameters obtained by cross validation for best model predictions on train set are:
 - bootstrap
 - True
@@ -92,3 +92,22 @@ The hyper parameters obtained by cross validation for best model predictions on 
 - min_samples_leaf: 4
 - min_samples_split: 2
 - n_estimators: 10
+
+## TCN model training
+This notebook offers several functionalities
+* Building and training a TCN model on training data set, evaluating it against validation set. Several formats of datasets can be built.
+* Making predictions of the hold out test set
+* The results of the cross validation among the different hyperparameters
+
+
+###  How to reproduce exactly the results on the test set
+
+The hyper parameters obtained by cross validation for best model predictions on validation set are:
+
+- Regularization: 1e-6
+- Dense layer: one dense activation layer with Leaky Relu activation function and one dense layer with sigmoid activation function.
+- Gamma (Binary Focal loss): 5
+- Filter_size=64
+- Kernel_size=2
+- Batch size: 1
+- Epochs: 200
