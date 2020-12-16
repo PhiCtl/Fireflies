@@ -332,7 +332,7 @@ def build_model_RF(X,Y):
     clf.fit(x_tr_reshaped,y_tr_reshaped)
     
     #save model
-    joblib.dump(clf, "./random_forest.joblib")
+    joblib.dump(clf, "Results/random_forest.joblib")
 
 def predict(X,Y, flag, batch_size = 32, epochs = 200):
   """ Predicts labels for X given and compares predictions to ground truth Y
