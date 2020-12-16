@@ -71,12 +71,14 @@ This notebook offers several functionalities
 The hyper parameters obtained by cross validation for best model predictions on validation set are:
 - Model type : 1 bidirectional LSTM layer
 - Number of nodes: 600
+- regularization: 1e-6
 - Regularization: none
 - Dropout: 1 dropout layer, dropout = 0.1
 - Dense layer: 1 dense activation layer with sigmoid activation function
 - Gamma (Binary Focal loss): 2
 - Batch size: 32
 - Epochs: 200
+seed = 2020
 
 ## Random Forest model training
 This notebook offers several functionalities
