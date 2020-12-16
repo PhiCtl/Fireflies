@@ -73,8 +73,6 @@ def load_test_data(folder_name):
   Y = np.empty((0,8));
   for ann in ['ann1.csv','ann2.csv','ann3.csv']:
     y = load_file_y(folder_name, ann)
-    print(y.shape)
-    y = expand(y)
     Y = np.vstack((Y,y))
   print(Y.shape, X.shape)
     
