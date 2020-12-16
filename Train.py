@@ -373,7 +373,7 @@ def predict(X,Y, flag, batch_size = 32, epochs = 200):
   if flag == "Random_Forest":
     
     ##Load MODEL
-    loaded_rf = joblib.load("./random_forest.joblib")
+    loaded_rf = joblib.load("Results/random_forest.joblib")
     
     #feature expansion
     X_expanded=feature_expansion(X)
