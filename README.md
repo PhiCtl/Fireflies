@@ -13,6 +13,7 @@ The following lines can be run at the beginning of a Colab notebook:
 ```
 $ !unzip Results/opt_LSTM_model.zip
 $ !unzip Results/opt_TCN_model.zip
+$ !unzip data_fly.zip
 ```
 Note that the optimal model architecture for Random Forest is already in a correct format.
 
