@@ -235,7 +235,7 @@ def evaluate_model_TCN(x_tr, y_tr, x_te, y_te, gamma=2,epochs= 200, verbose = 0,
     #Creation TCN object
     Tcn=TCN(nb_filters=64,kernel_size=2,nb_stacks=1,dilations=(8,16,32,64,128,256,512,1024),return_sequences=True,
 activation=LeakyReLU(0.01),kernel_initializer='he_normal')
-
+    
     i = Input(batch_shape=(1,None,  x_tr.shape[2]))
     o = Tcn(i)
     o = Dense(200, activation=LeakyReLU(0.01), kernel_regularizer=keras.regularizers.l1_l2(0.00001))(o)
@@ -303,6 +303,7 @@ activation=LeakyReLU(0.01),kernel_initializer='he_normal')
       plot_history(hist.history)
 
     return hist, loss, accuracy, wf1,wf1_, mf1, F1_tab, Ptab, Rtab
+
 
 
 def build_model_RF(X,Y):
