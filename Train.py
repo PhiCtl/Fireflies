@@ -25,7 +25,7 @@ import seaborn as sn
 from sklearn.ensemble import RandomForestClassifier
 from tcn import *
 
-def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2,epochs=2, node = 600, dropout = 0.1, m_type = 1, LSTM = True, TCN = False, CV = True):
+def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2,epochs=2, node = 600, dropout = 0.1, reg = 0, m_type = 1, LSTM = True, TCN = False, CV = True):
     """ Runs several experiments and averages the results
     Arguments: (x_tr, y_tr) training set
                (x_te, y_te) test set
@@ -63,7 +63,7 @@ def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2,epochs=2, node = 60
           x_1, x_2, y_1, y_2 = train_test_split(x_tr, y_tr, test_size = 0.2)
         
         if LSTM:
-          hist, loss, accuracy, wf1, wf1_, mf1, F1_tab, Ptab, Rtab = evaluate_model(x_1, y_1, x_2, y_2, nodes_nb = node, drop = dropout, model_type = m_type)
+          hist, loss, accuracy, wf1, wf1_, mf1, F1_tab, Ptab, Rtab = evaluate_model(x_1, y_1, x_2, y_2, nodes_nb = node, drop = dropout, model_type = m_type, reg = reg)
         
         if TCN:
              
@@ -95,7 +95,7 @@ def run_exp_hist(x_tr,y_tr, x_te, y_te, repeats=5, gamma = 2,epochs=2, node = 60
     return f1_scores, tab
 
 
-def evaluate_model(x_tr, y_tr, x_te, y_te, model_type = 1, gamma=2, nodes_nb=600, drop = 0.1, epochs = 200, verbose = 0, plot = 0, single_run = 0):
+def evaluate_model(x_tr, y_tr, x_te, y_te, model_type = 1, gamma=2, nodes_nb=600, drop = 0.1, epochs = 200, reg = 0, verbose = 0, plot = 0, single_run = 0):
     """Training function, to evaluate train set against test set or train set againts validation set
         Arguments: (x_tr, y_tr) training data
                    (x_te, y_te) testing/validation data
@@ -203,7 +203,7 @@ def evaluate_model(x_tr, y_tr, x_te, y_te, model_type = 1, gamma=2, nodes_nb=600
 
     return hist, loss, accuracy, wf1, wf1_, mf1, F1_tab, Ptab, Rtab
 
-def evaluate_model_TCN(x_tr, y_tr, x_te, y_te, gamma=2,epochs= 5, verbose = 0,plot = 0, single_run = 0):
+def evaluate_model_TCN(x_tr, y_tr, x_te, y_te, gamma=2,epochs= 200, verbose = 0,plot = 0, single_run = 0):
     """Training function, to evaluate train set against test set or train set againts validation set
         Arguments: (x_tr, y_tr) training data
                    (x_te, y_te) testing/validation data
@@ -369,7 +369,7 @@ def predict(X,Y, flag, batch_size = 32, epochs = 200):
     #build-in predictions  
     loss, accuracy, P, R, FN, FP = loaded_model.evaluate(X,Y, batch_size = batch_size)
 
-  if flag == "Random Forest":
+  if flag == "Random_Forest":
     
     ##Load MODEL
     loaded_rf = joblib.load("./random_forest.joblib")
