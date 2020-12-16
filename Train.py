@@ -332,7 +332,7 @@ def build_model_RF(X,Y):
     clf.fit(x_tr_reshaped,y_tr_reshaped)
     
     #save model
-    joblib.dump(clf, "Results/random_forest.joblib")
+    joblib.dump(clf, "Results/opt_random_forest_model.joblib")
 
 def predict(X,Y, flag, batch_size = 32, epochs = 200):
   """ Predicts labels for X given and compares predictions to ground truth Y
@@ -373,7 +373,7 @@ def predict(X,Y, flag, batch_size = 32, epochs = 200):
   if flag == "Random_Forest":
     
     ##Load MODEL
-    loaded_rf = joblib.load("Results/random_forest.joblib")
+    loaded_rf = joblib.load("Results/opt_random_forest_model.joblib")
     
     #feature expansion
     X_expanded=feature_expansion(X)
