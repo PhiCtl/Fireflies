@@ -82,7 +82,7 @@ The hyper parameters obtained by cross validation for best model predictions on 
 - Gamma (Binary Focal loss): 2
 - Batch size: 32
 - Epochs: 200
-seed = 2020
+We tried to fix the seeds to ensure reproducible results but it didn't work perfectly due to GPU stochasticity. To reproduce exactly the results in the report, the user should launch ´´´ predict(X,Y,"LSTM") ´´´  with the best model architecture _opt_LSTM_model_. 
 
 ## Random Forest model training
 This notebook offers several functionalities
@@ -106,7 +106,7 @@ This notebook offers several functionalities
 * The results of the cross validation among the different hyperparameters
 
 
-###  How to reproduce exactly the results on the test set
+###  How to reproduce the results on the test set
 
 The hyper parameters obtained by cross validation for best model predictions on validation set are:
 
