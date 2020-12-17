@@ -60,6 +60,7 @@ def load_training_data():
     """Should be run at same level as data_fly folder"""
     dir_list = os.listdir('data_fly')
     dir_list.remove('.ipynb_checkpoints')
+    dir_list.remove('ROI5_t4')
     folders = dir_list
     return load_all(folders)
 
