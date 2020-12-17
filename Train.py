@@ -393,7 +393,7 @@ def predict(X,Y, flag, batch_size = 32, epochs = 200):
 
   #customed predictions
   wf1, mf1, pf1, F1_tab, Ptab, Rtab, acc_tab = custom_scoring(y_te, y_pred)
-  Tab=perf_measure(y_pred,y_te)
+  Tab=perf_measure(y_te,y_pred)
 
   print("F1 score per label: ", F1_tab)
   print("Precision per label: ", Ptab)
