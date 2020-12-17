@@ -141,33 +141,26 @@ def custom_scoring(y_te, y_pred):
   return wf1, mf1, pf1, F1_tab, Ptab, Rtab, acc_tab
 
 
-def perf_measure(y_actual, y_hat):
-    TP_0 = 0
-    TP_1 = 0
-    TP_2= 0
-    TP_3= 0
-    TP_4=0
-    TP_5=0
-    TP_6=0
-    TP_7=0
-    for k in range(0, y_hat.shape[0]):
-      for i in range(0, y_hat.shape[1]): 
-          if y_actual[k,i]==y_hat[k,i]==1 and i==0:
-            TP_0 += 1
-          if y_actual[k,i]==y_hat[k,i]==1 and i==1:
-            TP_1 += 1
-          if y_actual[k,i]==y_hat[k,i]==1 and i==2:
-            TP_2 += 1
-          if y_actual[k,i]==y_hat[k,i]==1 and i==3:
-            TP_3 += 1
-          if y_actual[k,i]==y_hat[k,i]==1 and i==4:
-            TP_4 += 1
-          if y_actual[k,i]==y_hat[k,i]==1 and i==5:
-            TP_5 += 1
-          if y_actual[k,i]==y_hat[k,i]==1 and i==6:
-            TP_6 += 1
-          if y_actual[k,i]==y_hat[k,i]==1 and i==7:
-            TP_7 += 1
-          
-
-    return [TP_0,TP_1,TP_2,TP_3, TP_4,TP_5,TP_6, TP_7]
+def perf_measure(y_te, y_pred):
+    TP = np.zeros(8)
+    FN = np.zeros(8)
+    FP = np.zeros(8)
+    TN = np.zeros(8)
+    for i in range(y_pred.shape[1]):
+      tp = TruePositives()
+      fn = FalseNegatives()
+      fp = FalsePositives()
+      tn = TrueNegatives()
+      tp.update_state(y_te[:,i], y_pred[:,i])
+      fn.update_state(y_te[:,i], y_pred[:,i])
+      fp.update_state(y_te[:,i], y_pred[:,i])
+      tn.update_state(y_te[:,i], y_pred[:,i])
+      TP[i] = tp.result().numpy()
+      FN[i] = fn.result().numpy()
+      FP[i] = fp.result().numpy()
+      TN[i] = tn.result().numpy()
+      tp.reset_states()
+      fn.reset_states()
+      fp.reset_states()
+      tn.reset_states()
+    return [TP, TN, FN, FP]
