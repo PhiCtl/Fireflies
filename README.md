@@ -38,6 +38,7 @@ Note that the optimal model architecture for Random Forest is already in a corre
 
 ## Installation
 We strongly advise the user to run our program on Google Colab framework (with a GPU) to speed up the runtime. 
+However, due to Colab stochasticity, we have some issues with the reproducibility of our results. Our report results refer to scores obtained with the optimal models stored under opt_LSTM_model.zip, opt_TCN_model.zip and opt_random_forest_model.joblib. 
 
 ### Packages
 We use keras to build our neural networks model, along with the binary focal loss. 
@@ -57,10 +58,24 @@ The versions are :
 For confidentiality issues, the training data we use may not be shared, and the user might request access to Prof. Alexander Mathis. The data should be inserted in a folder called _data_fly_.
 
 ## Predictions
+
+### From terminal
 If one wants to make predictions using one of our model, the run.py file  should be launch at the same level as the other code files. Further instructions will be given to the user through the command line prompt.
 The user should first of all enter the name of the folder in _data_fly_ folder that contains the test files. Then the wanted model for predictions can be entered: LSTM, TCN or Random_Forest.
 ´´´
 $ ROI5_t4
+´´´
+So _data_fly_ should have the following architecture:
+    .
+    ├── data_fly/                            
+    |  ├── CS_170910_avi_ROI1_E02
+    |  ├── ... (145 files)
+    |  ├── ROI5_t4
+
+### From Notebooks
+In all our notebook, if one only wants to make predictions on our test set, the following line should be run once _X_tr_ and _Y_tr_ are built with the correct flag: LSTM, Random_Forest or TCN.
+´´´
+$ predict(test[0],test[1], flag)
 ´´´
 
 ## Notebooks
