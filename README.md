@@ -58,7 +58,10 @@ For confidentiality issues, the training data we use may not be shared, and the 
 
 ## Predictions
 If one wants to make predictions using one of our model, the run.py file  should be launch at the same level as the other code files. Further instructions will be given to the user through the command line prompt.
-
+The user should first of all enter the name of the folder in _data_fly_ folder that contains the test files. Then the wanted model for predictions can be entered: LSTM, TCN or Random_Forest.
+´´´
+$ ROI5_t4
+´´´
 
 ## Notebooks
 
