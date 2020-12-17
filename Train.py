@@ -268,7 +268,7 @@ activation=LeakyReLU(0.01),kernel_initializer='he_normal')
 
     #evaluate F1 score for each label
     F1_tab, Ptab, Rtab, wf1_ = F1_score(y_te, y_pred, w)
-    TP0,TP1,TP2,TP3,TP4,TP5,TP6,TP7=perf_measure(y_pred,y_te)
+    
     
     #evaluate accuracy per label
     acc_tab = Acc(y_te, y_pred)
@@ -299,14 +299,7 @@ activation=LeakyReLU(0.01),kernel_initializer='he_normal')
       print("-> Precision per label: ", Ptab)
       print("-> Recall per label: ", Rtab)
       print("-> Loss: ", loss)
-      print("True positive cat 0:", TP0)
-      print("True positive cat 1:", TP1)
-      print("True positive cat 2:", TP2)
-      print("True positive cat 3:", TP3)
-      print("True positive cat 4:", TP4)
-      print("True positive cat 5:", TP5)
-      print("True positive cat 6:", TP6)
-      print("True positive cat 7:", TP7)
+      
 
     if plot:
       plot_history(hist.history)
@@ -400,11 +393,14 @@ def predict(X,Y, flag, batch_size = 32, epochs = 200):
 
   #customed predictions
   wf1, mf1, pf1, F1_tab, Ptab, Rtab, acc_tab = custom_scoring(y_te, y_pred)
+  tab=perf_measure(y_pred,y_te)
 
   print("F1 score per label: ", F1_tab)
   print("Precision per label: ", Ptab)
   print("Recall per label: ", Rtab)
   print("Macro F1 score: ", mf1, " ; Weighted F1 score: ", wf1, " ; Proportional F1 score: ", pf1)
+  for i, tp in enumerate(tab):
+        print("True positive number for label ", i, " :", tp)
   
   y_pred = y_pred > 0.5
   print("Prediction will be saved into Results/")
