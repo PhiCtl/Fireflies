@@ -30,6 +30,20 @@ def data_augmentation(x, y, T):
     
     return [batch_x, batch_y], [x_te, y_te], [x_val, y_val]
 
+def window_splitting(X,Y,T):
+    """Split final test set into smaller time windows
+    Arguments: (X,Y) total data set (3D arrays) of size(N, S, features_nb)
+    Returns: (X, Y) (3D array) of size ( N*T, S/T, features_nb)"""
+    n = np.int(X.shape[1]/T)
+    bs = X.shape[0]
+    batch_x = np.zeros((bs*T,n,X.shape[2]))
+    batch_y = np.zeros((bs*T,n,Y.shape[2]))
+
+    #build batches
+    for i in range(T):
+      batch_x[i*bs:bs*(i+1),:,:] = X[:,i*n:n*(i+1),:]
+      batch_y[i*bs:bs*(i+1),:,:] = Y[:,i*n:n*(i+1),:]
+    return [batch_x, batch_y]
 
 def data_augmentation_2(x,y):
     "Creates a new larger data set by randomly perturbing positions with gaussian noise"
