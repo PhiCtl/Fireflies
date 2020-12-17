@@ -268,6 +268,7 @@ activation=LeakyReLU(0.01),kernel_initializer='he_normal')
 
     #evaluate F1 score for each label
     F1_tab, Ptab, Rtab, wf1_ = F1_score(y_te, y_pred, w)
+    TP0,TP1,TP2,TP3,TP4,TP5,TP6,TP7=perf_measure(y_pred,y_te)
     
     #evaluate accuracy per label
     acc_tab = Acc(y_te, y_pred)
@@ -298,6 +299,14 @@ activation=LeakyReLU(0.01),kernel_initializer='he_normal')
       print("-> Precision per label: ", Ptab)
       print("-> Recall per label: ", Rtab)
       print("-> Loss: ", loss)
+      print("True positive cat 0:", TP0)
+      print("True positive cat 1:", TP1)
+      print("True positive cat 2:", TP2)
+      print("True positive cat 3:", TP3)
+      print("True positive cat 4:", TP4)
+      print("True positive cat 5:", TP5)
+      print("True positive cat 6:", TP6)
+      print("True positive cat 7:", TP7)
 
     if plot:
       plot_history(hist.history)
