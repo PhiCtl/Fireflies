@@ -399,8 +399,9 @@ def predict(X,Y, flag, batch_size = 32, epochs = 200):
   print("Precision per label: ", Ptab)
   print("Recall per label: ", Rtab)
   print("Macro F1 score: ", mf1, " ; Weighted F1 score: ", wf1, " ; Proportional F1 score: ", pf1)
-  for i, tp in enumerate(tab):
-        print("True positive number for label ", i, " :", tp)
+  for name, tab in zip(["True Positive ", "True Negative ", "False Positive ", "False Negatives "], Tab):
+      for i, t in enumerate(tab):
+        print(name, "number for label ", i, " :", t)
   
   y_pred = y_pred > 0.5
   tf.cast(y_pred, tf.int32)
