@@ -403,6 +403,8 @@ def predict(X,Y, flag, batch_size = 32, epochs = 200):
         print("True positive number for label ", i, " :", tp)
   
   y_pred = y_pred > 0.5
+  tf.cast(y_pred, tf.int32)
   print("Prediction will be saved into Results/")
   name = 'Results/'+flag+'_Annotation.csv'
-  pd.DataFrame(y_pred, columns=["arch", "burrow + arch", "drag + arch", "groom","tap + arch","egg", "proboscis", "idle"]).to_csv(name)
+  pd.DataFrame(tf.get_static_value(y_pred), columns=["arch", "burrow + arch", "drag + arch", "groom","tap + arch","egg", "proboscis", "idle"]).to_csv(name)
+ 
